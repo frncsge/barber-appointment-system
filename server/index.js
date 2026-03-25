@@ -1,10 +1,15 @@
 import express from "express";
 import dotenv from "dotenv";
+import workHoursRoutes from "./routes/workHours.route.js";
 
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
+
+app.use(express.json());
+
+app.use("/api", workHoursRoutes);
 
 app.get("/", (req, res) => {
   res.send("barber-appointment-system server is running");
