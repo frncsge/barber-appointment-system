@@ -1,6 +1,6 @@
 import pool from "../../config/dbConfig.js";
 
-export const insertWorkHours = async ({
+export const createWorkHours = async ({
   date,
   startTime,
   endTime,
@@ -16,7 +16,23 @@ export const insertWorkHours = async ({
     );
   } catch (error) {
     console.error(
-      "An error occured while trying to insert new work hours:",
+      "An error occured while trying to create new work hours:",
+      error,
+    );
+    throw error;
+  }
+};
+
+export const getWorkHoursByDate = async (date) => {
+  try {
+    const result = await pool.query(
+      "SELECT * FROM work_hours WHERE date = $1",
+      [date],
+    );
+    return result.rows[0];
+  } catch (error) {
+    console.error(
+      "An error occured while trying to get work hours by date:",
       error,
     );
     throw error;
