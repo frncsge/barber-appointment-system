@@ -4,6 +4,7 @@ import {
   validateSlotInterval,
   validateSlotIntervalLength,
 } from "../utils/time.util.js";
+import { validateDateFormat, validateDateValues } from "../utils/date.util.js";
 
 export const validateWorkHoursInput = ({
   date,
@@ -15,14 +16,20 @@ export const validateWorkHoursInput = ({
     return "All inputs are required";
   }
 
+  // stricly check proper date format YYYY-MM-DD
+  if(!validateDateFormat(date)) {
+    return "Date must be in YYYY-MM-DD format"
+  }
+
   // check if date is valid
-  if (isNaN(new Date(date).getTime())) {
+  if (!validateDateValues(date)) {
     return "Invalid date";
   }
 
   if (!validateTime(startTime)) {
     return "Start time is invalid";
   }
+
   if (!validateTime(endTime)) {
     return "End time is invalid";
   }
