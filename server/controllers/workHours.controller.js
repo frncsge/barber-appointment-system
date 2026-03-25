@@ -47,16 +47,12 @@ export const getWorkHours = async (req, res) => {
   if (error) return res.status(400).json({ message: error });
 
   try {
-    const result = await getWorkHoursByDate(date);
-    res.status(200).json({ result });
+    const workHours = await getWorkHoursByDate(date);
+    res.status(200).json({ workHours });
   } catch (error) {
-    console.error(
-      "An error occured while trying to get work hours:",
-      error,
-    );
+    console.error("An error occured while trying to get work hours:", error);
     res.status(500).json({
-      message:
-        "Server error. An error occured while trying to get work hours.",
+      message: "Server error. An error occured while trying to get work hours.",
     });
   }
 };
