@@ -39,3 +39,33 @@ export const validateSlotIntervalLength = ({
 
   return true;
 };
+
+export const timeToMinute = (time) => {
+  const [hour, minute] = time.split(":").map((str) => Number(str));
+  return hour * 60 + minute;
+};
+
+export const minuteToTime = (minute) => {
+  const h = Math.floor(minute / 60);
+  const m = minute % 60;
+
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+};
+
+export const addSlotIntervalToTime = (time, slotInterval) => {
+  const total = timeToMinute(time) + slotInterval;
+  return minuteToTime(total);
+};
+
+export const generateTimeSlots = ({ startTime, endTime, slotInterval }) => {
+  const slots = [];
+  let current = timeToMinute(startTime);
+  const end = timeToMinute(endTime);
+
+  while (current + slotInterval <= end) {
+    slots.push(minuteToTime(current));
+    current += slotInterval;
+  }
+
+  return slots;
+};
