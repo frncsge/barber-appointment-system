@@ -4,6 +4,7 @@ import {
   createWorkHours,
   getWorkHoursByDate,
 } from "../models/workHours.model.js";
+import { generateTimeSlots } from "../utils/time.util.js";
 
 export const addWorkHours = async (req, res) => {
   const { date, startTime, endTime, slotInterval } = req.body;
@@ -53,6 +54,43 @@ export const getWorkHours = async (req, res) => {
     console.error("An error occured while trying to get work hours:", error);
     res.status(500).json({
       message: "Server error. An error occured while trying to get work hours.",
+    });
+  }
+};
+
+export const getAvailableTimeSlots = async (req, res) => {
+  const { date } = req.params;
+
+  const error = validateDateInput(date);
+
+  if (error) res.status(400).json({ message: error });
+
+  try {
+    const workHours = await getWorkHoursByDate(date);
+
+    if (!workHours)
+      return res
+        .status(200)
+        .json({ message: `Work hours have not been set for ${date}` });
+
+    const { start_time, end_time, slot_interval } = workHours;
+
+    // generate time slots based on work hours + slot interval
+    const timeSlots = generateTimeSlots({
+      startTime: start_time,
+      endTime: end_time,
+      slotInterval: slot_interval,
+    });
+
+    res.status(201).json({ timeSlots });
+  } catch (error) {
+    console.error(
+      "An error occured while trying to get available time slots:",
+      error,
+    );
+    res.status(500).json({
+      message:
+        "Server error. An error occured while trying to get available time slots.",
     });
   }
 };
