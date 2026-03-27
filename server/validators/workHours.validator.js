@@ -20,11 +20,11 @@ export const validateWorkHoursInput = ({
   if (dateError) return dateError;
 
   if (!validateTime(startTime)) {
-    return "Start time is invalid";
+    return "Start time must be in HH:MM format";
   }
 
   if (!validateTime(endTime)) {
-    return "End time is invalid";
+    return "End time must be in HH:MM format";
   }
 
   // make sure that start time is earlier than end time
