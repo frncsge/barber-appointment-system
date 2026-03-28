@@ -38,3 +38,26 @@ export const getWorkHoursByDate = async (date) => {
     throw error;
   }
 };
+
+export const updateWorkHoursByDate = async ({ date, keys, values }) => {
+  const setClaus = keys.map((key, i) => `${key} = $${i + 1}`).join(", ");
+
+  const query = `
+    UPDATE work_hours
+    SET ${setClaus}
+    WHERE date = $${keys.length + 1}
+    RETURNING *
+  `;
+
+  values.push(date);
+  try {
+    const result = await pool.query(query, values);
+    return result.rows[0];
+  } catch (error) {
+    console.error(
+      "An error occured while trying to update work hours by date:",
+      error,
+    );
+    throw error;
+  }
+};
