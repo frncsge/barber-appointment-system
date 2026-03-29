@@ -4,6 +4,7 @@ import {
   createWorkHours,
   getWorkHoursByDate,
   updateWorkHoursByDate,
+  deleteWorkHoursByDate,
 } from "../models/workHours.model.js";
 import { generateTimeSlots } from "../utils/time.util.js";
 import { getUnavailableTimeSlotsByDate } from "../models/unavailableTimeSlots.model.js";
@@ -60,7 +61,11 @@ export const getWorkHours = async (req, res) => {
 
   try {
     const workHours = await getWorkHoursByDate(date);
-    res.status(200).json({ workHours });
+
+    if (workHours.rowCount === 0)
+      return res.status(404).json({ message: `No work hours set for ${date}` });
+
+    res.status(200).json({ workHours: workHours.rows[0] });
   } catch (error) {
     console.error("An error occured while trying to get work hours:", error);
     res.status(500).json({
@@ -190,6 +195,34 @@ export const updateWorkHours = async (req, res) => {
     res.status(500).json({
       message:
         "Server error. An error occured while trying to update work hours.",
+    });
+  }
+};
+
+export const deleteWorkHours = async (req, res) => {
+  const { date } = req.params;
+
+  if (date === undefined)
+    return res.status(400).json({ message: "Date is required" });
+
+  const error = validateDateInput(date);
+  if (error) res.status(400).json({ message: error });
+
+  try {
+    const result = await deleteWorkHoursByDate(date);
+    if (result.rowCount === 0)
+      return res
+        .status(404)
+        .json({ message: `No work hours found for ${date}` });
+
+    res
+      .status(200)
+      .json({ message: `Work hours on ${date} is deleted successfully` });
+  } catch (error) {
+    console.error("An error occured while trying to delete work hours:", error);
+    res.status(500).json({
+      message:
+        "Server error. An error occured while trying to delete work hours.",
     });
   }
 };
