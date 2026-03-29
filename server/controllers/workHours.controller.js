@@ -156,7 +156,7 @@ export const updateWorkHours = async (req, res) => {
 
   try {
     const workHours = await getWorkHoursByDate(setDate);
-    if (!workHours)
+    if (workHours.rowCount === 0)
       return res
         .status(200)
         .json({ message: `Work hours have not been set for ${setDate}` });
