@@ -17,6 +17,7 @@ import {
 } from "../utils/email.util.js";
 import { isValidOtp } from "../utils/otp.util.js";
 import { isValidPassword, passwordsMatch } from "../utils/password.util.js";
+import { checkRateLimit } from "../utils/rateLimit.util.js";
 import redisClient from "../../config/redisConfig.js";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
@@ -41,6 +42,20 @@ export const logIn = async (req, res) => {
       .json({ message: "Password must be at least 8 characters long" });
 
   try {
+    // initialize rate limit
+    const allowed = await checkRateLimit(
+      [
+        { key: `rateLimit:login:ip:${req.ip}`, maxAttempts: 25 },
+        { key: `rateLimit:login:email:${email}`, maxAttempts: 8 },
+      ],
+      15 * 60,
+    );
+
+    if (!allowed)
+      return res.status(429).json({
+        message: "Too many failed login attempts. Please try again later",
+      });
+
     const user = await getUserByEmail(email);
 
     if (user.rowCount === 0)
