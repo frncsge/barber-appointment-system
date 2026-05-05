@@ -20,7 +20,6 @@ import { isValidPassword, passwordsMatch } from "../utils/password.util.js";
 import redisClient from "../../config/redisConfig.js";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
-import { REDIS_FLUSH_MODES } from "redis";
 
 const saltRound = 12;
 
@@ -30,6 +29,16 @@ export const logIn = async (req, res) => {
 
   if (!email || !password)
     return res.status(400).json({ message: "Email and password are required" });
+
+  // example of invalid: user email@domain.com (space inside)
+  if (!isValidEmail(email))
+    return res.status(400).json({ message: "Invalid email format" });
+
+  // validate password
+  if (!isValidPassword(password))
+    return res
+      .status(400)
+      .json({ message: "Password must be at least 8 characters long" });
 
   try {
     const user = await getUserByEmail(email);
