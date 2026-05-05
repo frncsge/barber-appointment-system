@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser";
 import workHoursRoutes from "./routes/workHours.route.js";
 import authRoutes from "./routes/auth.route.js";
 import cors from "cors";
+import { globalRateLimit } from "./middlewares/rateLimit.middleware.js";
 
 dotenv.config();
 
@@ -12,6 +13,7 @@ const port = process.env.PORT || 3000;
 
 app.set("trust proxy", 1);
 
+app.use(globalRateLimit);
 app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
