@@ -151,14 +151,8 @@ export const register = async (req, res) => {
 
     if (!allowed)
       return res.status(429).json({
-        message: "Too many failed login attempts. Please try again later",
+        message: "Too many registration attempts. Please try again later",
       });
-
-    // check if user already exists
-    const user = await getUserByEmail(email);
-
-    if (user.rowCount > 0)
-      return res.status(400).json({ message: "Email already registered" });
 
     // hash password
     const hashedPassword = await bcrypt.hash(password, saltRound);
@@ -187,7 +181,7 @@ export const register = async (req, res) => {
   } catch (error) {
     // duplicate email (for idempotency)
     if (error.code === "23505")
-      return res.status(400).json({ message: "Email already resgistered" });
+      return res.status(400).json({ message: "Email already in use" });
 
     console.error("An error occured while trying to register new user:", error);
     res.status(500).json({
@@ -206,6 +200,17 @@ export const verify = async (req, res) => {
       .json({ message: "Expired or invalid email verification token" });
 
   try {
+    // initialize and check rate limit
+    const allowed = await checkRateLimit(
+      [{ key: `rateLimit:verify:ip:${req.ip}`, maxAttempts: 30 }],
+      15 * 60,
+    );
+
+    if (!allowed)
+      return res.status(429).json({
+        message: "Too many failed login attempts. Please try again later",
+      });
+
     // retrieve verification token from redis
     const stored = await redisClient.get(`verify:${token}`);
 
