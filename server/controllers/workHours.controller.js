@@ -9,6 +9,7 @@ import {
 import { generateTimeSlots } from "../utils/time.util.js";
 import { getUnavailableTimeSlotsByIdAndDate } from "../models/unavailableTimeSlots.model.js";
 import { isPastDate } from "../utils/date.util.js";
+import { getAppointments } from "../models/appointments.model.js";
 
 export const addWorkHours = async (req, res) => {
   const { date, startTime, endTime, slotInterval } = req.body;
@@ -114,9 +115,17 @@ export const getAvailableTimeSlots = async (req, res) => {
     const result = (await getUnavailableTimeSlotsByIdAndDate(id, date)) || [];
     const unavailableTimeSlots = result.map((res) => res.time_slot.slice(0, 5)); // slice to make it 00:00 instead of 00:00:00
 
-    const availableTimeSlots = timeSlots.filter(
-      (slot) => !unavailableTimeSlots.includes(slot),
-    );
+    const [unavailable, booked] = await Promise.all([
+      await getUnavailableTimeSlotsByIdAndDate(id, date),
+      await getAppointments(id, date),
+    ]);
+
+    const blocked = new Set([
+      ...unavailable.map((slot) => slot.time_slot.slice(0, 5)),
+      ...booked.map((slot) => slot.time_slot.slice(0, 5)),
+    ]);
+
+    const availableTimeSlots = timeSlots.filter((slot) => !blocked.has(slot));
 
     res
       .status(200)
