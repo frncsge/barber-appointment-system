@@ -17,21 +17,47 @@ import {
 } from "../utils/email.util.js";
 import { isValidOtp } from "../utils/otp.util.js";
 import { isValidPassword, passwordsMatch } from "../utils/password.util.js";
+import { checkRateLimit } from "../utils/rateLimit.util.js";
 import redisClient from "../../config/redisConfig.js";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
-import { REDIS_FLUSH_MODES } from "redis";
+import { maxHeaderSize } from "http";
 
 const saltRound = 12;
+const OTP_MAX_ATTEMPTS = 5;
 
 export const logIn = async (req, res) => {
-  const email = req.body.email?.trim();
+  const email = req.body.email?.trim().toLowerCase();
   const password = req.body.password?.trim();
 
   if (!email || !password)
     return res.status(400).json({ message: "Email and password are required" });
 
+  // example of invalid: user email@domain.com (space inside)
+  if (!isValidEmail(email))
+    return res.status(400).json({ message: "Invalid email format" });
+
+  // validate password
+  if (!isValidPassword(password))
+    return res
+      .status(400)
+      .json({ message: "Password must be at least 8 characters long" });
+
   try {
+    // initialize and check rate limit
+    const allowed = await checkRateLimit(
+      [
+        { key: `rateLimit:login:ip:${req.ip}`, maxAttempts: 25 },
+        { key: `rateLimit:login:email:${email}`, maxAttempts: 8 },
+      ],
+      15 * 60,
+    );
+
+    if (!allowed)
+      return res.status(429).json({
+        message: "Too many failed login attempts. Please try again later",
+      });
+
     const user = await getUserByEmail(email);
 
     if (user.rowCount === 0)
@@ -87,7 +113,7 @@ export const logIn = async (req, res) => {
 };
 
 export const register = async (req, res) => {
-  const email = req.body.email?.trim();
+  const email = req.body.email?.trim().toLowerCase();
   const password = req.body.password?.trim();
   const confirmPassword = req.body.confirmPassword?.trim();
   const accountName = req.body.accountName?.trim();
@@ -113,11 +139,22 @@ export const register = async (req, res) => {
     return res.status(400).json({ message: "Passwords do not match" });
 
   try {
-    // check if user already exists
-    const user = await getUserByEmail(email);
+    // initialize and check rate limit
+    const allowed = await checkRateLimit(
+      [
+        { key: `rateLimit:register:ip:${req.ip}`, maxAttempts: 10 },
+        {
+          key: `rateLimit:register:email:${email}`,
+          maxAttempts: 3,
+        },
+      ],
+      60 * 60,
+    );
 
-    if (user.rowCount > 0)
-      return res.status(400).json({ message: "Email already registered" });
+    if (!allowed)
+      return res.status(429).json({
+        message: "Too many registration attempts. Please try again later",
+      });
 
     // hash password
     const hashedPassword = await bcrypt.hash(password, saltRound);
@@ -146,7 +183,7 @@ export const register = async (req, res) => {
   } catch (error) {
     // duplicate email (for idempotency)
     if (error.code === "23505")
-      return res.status(400).json({ message: "Email already resgistered" });
+      return res.status(400).json({ message: "Email already in use" });
 
     console.error("An error occured while trying to register new user:", error);
     res.status(500).json({
@@ -165,6 +202,17 @@ export const verify = async (req, res) => {
       .json({ message: "Expired or invalid email verification token" });
 
   try {
+    // initialize and check rate limit
+    const allowed = await checkRateLimit(
+      [{ key: `rateLimit:verify:ip:${req.ip}`, maxAttempts: 30 }],
+      15 * 60,
+    );
+
+    if (!allowed)
+      return res.status(429).json({
+        message: "Too many failed login attempts. Please try again later",
+      });
+
     // retrieve verification token from redis
     const stored = await redisClient.get(`verify:${token}`);
 
@@ -274,7 +322,7 @@ export const logOut = async (req, res) => {
 };
 
 export const sendVerification = async (req, res) => {
-  const { email } = req.body;
+  const email = req.body.email?.trim().toLowerCase();
 
   if (!email) return res.status(400).json({ message: "Email is required" });
 
@@ -282,6 +330,22 @@ export const sendVerification = async (req, res) => {
     return res.status(400).json({ message: "Invalid email format" });
 
   try {
+    const allowed = await checkRateLimit(
+      [
+        { key: `rateLimit:sendVerification:ip:${req.ip}`, maxAttempts: 10 },
+        {
+          key: `rateLimit:sendVerification:email:${email}`,
+          maxAttempts: 3,
+        },
+      ],
+      60 * 60,
+    );
+
+    if (!allowed)
+      return res
+        .status(429)
+        .json({ message: "Too many requests. Please try again later" });
+
     const user = await getUserByEmail(email);
 
     if (user.rows[0] && user.rows[0].is_verified === false) {
@@ -319,7 +383,7 @@ export const sendVerification = async (req, res) => {
 };
 
 export const sendOtp = async (req, res) => {
-  const email = req.body.email?.trim();
+  const email = req.body.email?.trim().toLowerCase();
 
   if (!email)
     return res.status(400).json({
@@ -330,6 +394,22 @@ export const sendOtp = async (req, res) => {
     return res.status(400).json({ message: "Invalid email format" });
 
   try {
+    const allowed = await checkRateLimit(
+      [
+        { key: `rateLimit:sendOtp:ip:${req.ip}`, maxAttempts: 10 },
+        {
+          key: `rateLimit:sendOtp:email:${email}`,
+          maxAttempts: 3,
+        },
+      ],
+      60 * 60,
+    );
+
+    if (!allowed)
+      return res.status(429).json({
+        message: "Too many password reset requests. Please try again later",
+      });
+
     const user = await getUserByEmail(email);
 
     if (user.rows[0] && user.rowCount > 0) {
@@ -353,7 +433,7 @@ export const sendOtp = async (req, res) => {
 };
 
 export const verifyOtp = async (req, res) => {
-  const email = req.body.email?.trim();
+  const email = req.body.email?.trim().toLowerCase();
   const otp = req.body.otp?.trim();
 
   if (!email)
@@ -370,6 +450,16 @@ export const verifyOtp = async (req, res) => {
     return res.status(400).json({ message: "Invalid or expired OTP" });
 
   try {
+    const allowed = checkRateLimit(
+      [{ key: `rateLimit:verifyOtp:ip:${req.ip}`, maxAttempts: 60 }],
+      15 * 60,
+    );
+
+    if (!allowed)
+      return res.status(429).json({
+        message: "Too many OTP verification attempts. Please try again later",
+      });
+
     // retrieve stored otp in redis
     const storedOtp = await redisClient.get(`password-reset:${email}`);
 
@@ -378,6 +468,13 @@ export const verifyOtp = async (req, res) => {
 
     if (otp !== storedOtp)
       return res.status(400).json({ message: "Invalid or expired OTP" });
+
+    // increment otp attempt and check if it reached max
+    const count = await redisClient.incr(`otp:attempts:${otp}`);
+    if (count > OTP_MAX_ATTEMPTS)
+      return res.status(429).json({
+        message: "Too many incorrect attempts. Please request a new code",
+      });
 
     // if otp valid, delete the used OTP and create reset password session using redis
     await redisClient.del(`password-reset:${email}`);
@@ -399,7 +496,7 @@ export const verifyOtp = async (req, res) => {
 };
 
 export const resetPassword = async (req, res) => {
-  const email = req.body.email?.trim();
+  const email = req.body.email?.trim().toLowerCase();
   const newPassword = req.body.newPassword?.trim();
   const confirmNewPassword = req.body.confirmNewPassword?.trim();
 

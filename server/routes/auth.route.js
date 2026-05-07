@@ -10,12 +10,11 @@ import {
   verifyOtp,
   resetPassword,
 } from "../controllers/auth.controller.js";
-import { loginRateLimit } from "../middlewares/rateLimit.middleware.js";
 
 const router = express.Router();
 
 router.post("/register", register);
-router.post("/log-in", loginRateLimit, logIn);
+router.post("/log-in", logIn);
 router.post("/log-out", logOut);
 router.post("/refresh", refresh);
 router.post("/email-verifications", sendVerification);
