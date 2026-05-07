@@ -25,7 +25,7 @@ import crypto from "crypto";
 const saltRound = 12;
 
 export const logIn = async (req, res) => {
-  const email = req.body.email?.trim();
+  const email = req.body.email?.trim().toLowerCase();
   const password = req.body.password?.trim();
 
   if (!email || !password)
@@ -46,7 +46,7 @@ export const logIn = async (req, res) => {
     const allowed = await checkRateLimit(
       [
         { key: `rateLimit:login:ip:${req.ip}`, maxAttempts: 25 },
-        { key: `rateLimit:login:email:${email.toLowerCase()}`, maxAttempts: 8 },
+        { key: `rateLimit:login:email:${email}`, maxAttempts: 8 },
       ],
       15 * 60,
     );
@@ -111,7 +111,7 @@ export const logIn = async (req, res) => {
 };
 
 export const register = async (req, res) => {
-  const email = req.body.email?.trim();
+  const email = req.body.email?.trim().toLowerCase();
   const password = req.body.password?.trim();
   const confirmPassword = req.body.confirmPassword?.trim();
   const accountName = req.body.accountName?.trim();
@@ -142,7 +142,7 @@ export const register = async (req, res) => {
       [
         { key: `rateLimit:register:ip:${req.ip}`, maxAttempts: 10 },
         {
-          key: `rateLimit:register:email:${email.toLowerCase()}`,
+          key: `rateLimit:register:email:${email}`,
           maxAttempts: 3,
         },
       ],
@@ -320,7 +320,7 @@ export const logOut = async (req, res) => {
 };
 
 export const sendVerification = async (req, res) => {
-  const { email } = req.body;
+  const email = req.body.email?.trim().toLowerCase();
 
   if (!email) return res.status(400).json({ message: "Email is required" });
 
@@ -328,6 +328,22 @@ export const sendVerification = async (req, res) => {
     return res.status(400).json({ message: "Invalid email format" });
 
   try {
+    const allowed = await checkRateLimit(
+      [
+        { key: `rateLimit:sendVerification:ip:${req.ip}`, maxAttempts: 10 },
+        {
+          key: `rateLimit:sendVerification:email:${email}`,
+          maxAttempts: 3,
+        },
+      ],
+      60 * 60,
+    );
+
+    if (!allowed)
+      return res
+        .status(429)
+        .json({ message: "Too many requests. Please try again later" });
+
     const user = await getUserByEmail(email);
 
     if (user.rows[0] && user.rows[0].is_verified === false) {
@@ -365,7 +381,7 @@ export const sendVerification = async (req, res) => {
 };
 
 export const sendOtp = async (req, res) => {
-  const email = req.body.email?.trim();
+  const email = req.body.email?.trim().toLowerCase();
 
   if (!email)
     return res.status(400).json({
