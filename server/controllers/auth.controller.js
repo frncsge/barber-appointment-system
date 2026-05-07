@@ -392,6 +392,22 @@ export const sendOtp = async (req, res) => {
     return res.status(400).json({ message: "Invalid email format" });
 
   try {
+    const allowed = await checkRateLimit(
+      [
+        { key: `rateLimit:sendOtp:ip:${req.ip}`, maxAttempts: 10 },
+        {
+          key: `rateLimit:sendOtp:email:${email}`,
+          maxAttempts: 3,
+        },
+      ],
+      60 * 60,
+    );
+
+    if (!allowed)
+      return res
+        .status(429)
+        .json({ message: "Too many password reset requests. Please try again later" });
+
     const user = await getUserByEmail(email);
 
     if (user.rows[0] && user.rowCount > 0) {
@@ -415,7 +431,7 @@ export const sendOtp = async (req, res) => {
 };
 
 export const verifyOtp = async (req, res) => {
-  const email = req.body.email?.trim();
+  const email = req.body.email?.trim().toLowerCase();
   const otp = req.body.otp?.trim();
 
   if (!email)
