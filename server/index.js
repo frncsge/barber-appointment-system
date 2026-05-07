@@ -5,6 +5,7 @@ import workHoursRoutes from "./routes/workHours.route.js";
 import authRoutes from "./routes/auth.route.js";
 import cors from "cors";
 import { globalRateLimit } from "./middlewares/rateLimit.middleware.js";
+import appointmentsRoutes from "./routes/appointments.route.js";
 
 dotenv.config();
 
@@ -20,6 +21,7 @@ app.use(cookieParser());
 
 app.use("/api/auth", authRoutes);
 app.use("/api", workHoursRoutes);
+app.use("/api", appointmentsRoutes);
 
 app.get("/", (req, res) => {
   res.send("barber-appointment-system server is running");
