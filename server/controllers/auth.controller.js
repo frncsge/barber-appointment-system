@@ -21,8 +21,10 @@ import { checkRateLimit } from "../utils/rateLimit.util.js";
 import redisClient from "../../config/redisConfig.js";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
+import { maxHeaderSize } from "http";
 
 const saltRound = 12;
+const OTP_MAX_ATTEMPTS = 5;
 
 export const logIn = async (req, res) => {
   const email = req.body.email?.trim().toLowerCase();
@@ -404,9 +406,9 @@ export const sendOtp = async (req, res) => {
     );
 
     if (!allowed)
-      return res
-        .status(429)
-        .json({ message: "Too many password reset requests. Please try again later" });
+      return res.status(429).json({
+        message: "Too many password reset requests. Please try again later",
+      });
 
     const user = await getUserByEmail(email);
 
@@ -448,6 +450,16 @@ export const verifyOtp = async (req, res) => {
     return res.status(400).json({ message: "Invalid or expired OTP" });
 
   try {
+    const allowed = checkRateLimit(
+      [{ key: `rateLimit:verifyOtp:ip:${req.ip}`, maxAttempts: 60 }],
+      15 * 60,
+    );
+
+    if (!allowed)
+      return res.status(429).json({
+        message: "Too many OTP verification attempts. Please try again later",
+      });
+
     // retrieve stored otp in redis
     const storedOtp = await redisClient.get(`password-reset:${email}`);
 
@@ -456,6 +468,15 @@ export const verifyOtp = async (req, res) => {
 
     if (otp !== storedOtp)
       return res.status(400).json({ message: "Invalid or expired OTP" });
+
+    // increment otp attempt and check if it reached max
+    const count = await redisClient.incr(`otp:attempts:${otp}`);
+    if (count > OTP_MAX_ATTEMPTS)
+      return res
+        .status(429)
+        .json({
+          message: "Too many incorrect attempts. Please request a new code",
+        });
 
     // if otp valid, delete the used OTP and create reset password session using redis
     await redisClient.del(`password-reset:${email}`);
