@@ -42,11 +42,11 @@ export const logIn = async (req, res) => {
       .json({ message: "Password must be at least 8 characters long" });
 
   try {
-    // initialize rate limit
+    // initialize and check rate limit
     const allowed = await checkRateLimit(
       [
         { key: `rateLimit:login:ip:${req.ip}`, maxAttempts: 25 },
-        { key: `rateLimit:login:email:${email}`, maxAttempts: 8 },
+        { key: `rateLimit:login:email:${email.toLowerCase()}`, maxAttempts: 8 },
       ],
       15 * 60,
     );
@@ -137,6 +137,23 @@ export const register = async (req, res) => {
     return res.status(400).json({ message: "Passwords do not match" });
 
   try {
+    // initialize and check rate limit
+    const allowed = await checkRateLimit(
+      [
+        { key: `rateLimit:register:ip:${req.ip}`, maxAttempts: 10 },
+        {
+          key: `rateLimit:register:email:${email.toLowerCase()}`,
+          maxAttempts: 3,
+        },
+      ],
+      60 * 60,
+    );
+
+    if (!allowed)
+      return res.status(429).json({
+        message: "Too many failed login attempts. Please try again later",
+      });
+
     // check if user already exists
     const user = await getUserByEmail(email);
 
