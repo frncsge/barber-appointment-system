@@ -472,11 +472,9 @@ export const verifyOtp = async (req, res) => {
     // increment otp attempt and check if it reached max
     const count = await redisClient.incr(`otp:attempts:${otp}`);
     if (count > OTP_MAX_ATTEMPTS)
-      return res
-        .status(429)
-        .json({
-          message: "Too many incorrect attempts. Please request a new code",
-        });
+      return res.status(429).json({
+        message: "Too many incorrect attempts. Please request a new code",
+      });
 
     // if otp valid, delete the used OTP and create reset password session using redis
     await redisClient.del(`password-reset:${email}`);
@@ -498,7 +496,7 @@ export const verifyOtp = async (req, res) => {
 };
 
 export const resetPassword = async (req, res) => {
-  const email = req.body.email?.trim();
+  const email = req.body.email?.trim().toLowerCase();
   const newPassword = req.body.newPassword?.trim();
   const confirmNewPassword = req.body.confirmNewPassword?.trim();
 
