@@ -1,6 +1,6 @@
 import pool from "../../config/dbConfig.js";
 
-export const getAppointments = async (barberId, date) => {
+export const getAppointmentsByDate = async (barberId, date) => {
   try {
     const result = await pool.query(
       "SELECT * FROM appointments WHERE user_id = $1 AND date = $2",
