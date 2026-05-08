@@ -7,6 +7,7 @@ import {
 } from "../models/unavailableTimeSlots.model.js";
 import { getWorkHoursByIdAndDate } from "../models/workHours.model.js";
 import { isPastDate } from "../utils/date.util.js";
+import { getAppointments } from "../models/appointments.model.js";
 
 export const addUnavailableTimeSlot = async (req, res) => {
   const { date } = req.params;
@@ -52,15 +53,20 @@ export const addUnavailableTimeSlot = async (req, res) => {
       slotInterval: slot_interval,
     });
 
-    // get time slots marked as unavailable by the barber based on his work hours in a specific date
-    const unavailableTimeSlots = await getUnavailableTimeSlotsByIdAndDate(
-      req.user.id,
-      date,
-    );
+    // get time slots marked as unavailable by the barber based on his work hours in a specific date and booked ones
+    const [unavailable, booked] = await Promise.all([
+      getUnavailableTimeSlotsByIdAndDate(req.user.id),
+      getAppointments(req.user.id, date),
+    ]);
+
+    const blocked = new Set([
+      ...unavailable.map((slot) => slot.time_slot.slice(0, 5)),
+      ...booked.map((slot) => slot.time_slot.slice(0, 5)),
+    ]);
 
     // filter the generated time slots to exclude slots that are already marked as unavailable by the barber
     const availableGeneratedTimeSlots = generatedTimeSlots.filter(
-      (generatedTimeSlot) => !unavailableTimeSlots.includes(generatedTimeSlot),
+      (slot) => !blocked.has(slot),
     );
 
     // check if inputted time slot is in the generated slots
@@ -115,11 +121,11 @@ export const removeUnavailableTimeSlot = async (req, res) => {
   const error = validateDateInput(date);
   if (error) return res.status(400).json({ message: error });
 
-  // prevent user from adding unavailable time slot for a past date
+  // prevent user from removing an unavailable time slot for a past date
   if (isPastDate(date))
     return res
       .status(403)
-      .json({ message: "Cannot add unavailable time slot for a past date" });
+      .json({ message: "Cannot remove unavailable time slot for a past date" });
 
   if (!timeSlots)
     return res.status(400).json({ message: "Time slot is required" });
