@@ -7,7 +7,7 @@ import {
 } from "../models/unavailableTimeSlots.model.js";
 import { getWorkHoursByIdAndDate } from "../models/workHours.model.js";
 import { isPastDate } from "../utils/date.util.js";
-import { getAppointments } from "../models/appointments.model.js";
+import { getAppointmentsByDate } from "../models/appointments.model.js";
 
 export const addUnavailableTimeSlot = async (req, res) => {
   const { date } = req.params;
@@ -56,7 +56,7 @@ export const addUnavailableTimeSlot = async (req, res) => {
     // get time slots marked as unavailable by the barber based on his work hours in a specific date and booked ones
     const [unavailable, booked] = await Promise.all([
       getUnavailableTimeSlotsByIdAndDate(req.user.id),
-      getAppointments(req.user.id, date),
+      getAppointmentsByDate(req.user.id, date),
     ]);
 
     const blocked = new Set([

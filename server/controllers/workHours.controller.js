@@ -9,7 +9,7 @@ import {
 import { generateTimeSlots } from "../utils/time.util.js";
 import { getUnavailableTimeSlotsByIdAndDate } from "../models/unavailableTimeSlots.model.js";
 import { isPastDate } from "../utils/date.util.js";
-import { getAppointments } from "../models/appointments.model.js";
+import { getAppointmentsByDate } from "../models/appointments.model.js";
 
 export const addWorkHours = async (req, res) => {
   const { date, startTime, endTime, slotInterval } = req.body;
@@ -117,7 +117,7 @@ export const getAvailableTimeSlots = async (req, res) => {
 
     const [unavailable, booked] = await Promise.all([
       await getUnavailableTimeSlotsByIdAndDate(id, date),
-      await getAppointments(id, date),
+      await getAppointmentsByDate(id, date),
     ]);
 
     const blocked = new Set([

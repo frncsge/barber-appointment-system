@@ -6,7 +6,7 @@ import {
 import { validateTime, generateTimeSlots } from "../utils/time.util.js";
 import {
   createAppointment,
-  getAppointments,
+  getAppointmentsByDate,
 } from "../models/appointments.model.js";
 import { getWorkHoursByIdAndDate } from "../models/workHours.model.js";
 import { getUnavailableTimeSlotsByIdAndDate } from "../models/unavailableTimeSlots.model.js";
@@ -58,7 +58,7 @@ export const bookAppointment = async (req, res) => {
     // get the time slots marked as unavailable by the barber and time slots that are booked
     const [unavailable, booked] = await Promise.all([
       await getUnavailableTimeSlotsByIdAndDate(barberId, date),
-      await getAppointments(barberId, date),
+      await getAppointmentsByDate(barberId, date),
     ]);
 
     // combine them both using a Set (js like one array but no duplicate values)
@@ -99,6 +99,35 @@ export const bookAppointment = async (req, res) => {
     res.status(500).json({
       message:
         "Server error. An error occured while trying to book an appointment.",
+    });
+  }
+};
+
+export const getAppointments = async (req, res) => {
+  const { date } = req.query;
+
+  if (!date) return res.status(400).json({ message: "Date is required" });
+
+  if (!validateDateFormat(date))
+    return res.status(400).json({ message: "Date format must be YYYY-MM-DD" });
+
+  if (!validateDateValues(date))
+    return res
+      .status(400)
+      .json({ message: "Date must be a number and in a YYYY-MM-DD format" });
+
+  try {
+    const appointments = await getAppointmentsByDate(req.user.id, date);
+
+    res.status(200).json({ message: `Appointments for ${date}`, appointments });
+  } catch (error) {
+    console.error(
+      "An error occured while trying to get appointments by date:",
+      error,
+    );
+    res.status(500).json({
+      message:
+        "Server error. An error occured while trying to get appointments by date.",
     });
   }
 };
