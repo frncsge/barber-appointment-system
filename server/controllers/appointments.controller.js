@@ -15,6 +15,9 @@ export const bookAppointment = async (req, res) => {
   const { id: barberId } = req.params;
   const { date, timeSlot, customerName } = req.body;
 
+  if (isNaN(barberId))
+    return res.status(400).json({ message: "Id must be a number" });
+
   if (!date || !timeSlot || !customerName)
     return res.status(400).json({
       message: "Date, time slot, and name are required to book an appointment",
