@@ -1,6 +1,14 @@
+import { Routes, Route } from "react-router-dom";
+import Login from "./pages/Login.jsx";
+import Home from "./pages/Home.jsx";
+
 function App() {
   return (
-    <h1 class="text-3xl font-bold text-blue-600">Tailwind is working 🚀</h1>
+    <Routes>
+      <Route path="/login" element={<Login />} />
+
+      <Route path="/" element={<Home />} />
+    </Routes>
   );
 }
 
