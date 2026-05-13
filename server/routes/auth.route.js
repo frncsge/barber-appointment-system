@@ -9,9 +9,13 @@ import {
   sendOtp,
   verifyOtp,
   resetPassword,
+  getMe,
 } from "../controllers/auth.controller.js";
+import { authenticateUser } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
+
+router.get("/me", authenticateUser, getMe);
 
 router.post("/register", register);
 router.post("/log-in", logIn);

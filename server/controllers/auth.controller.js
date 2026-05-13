@@ -4,6 +4,7 @@ import {
   storeNewUser,
   verifyUser,
   updatePasswordByEmail,
+  getUserById,
 } from "../models/users.model.js";
 import {
   generateAccessToken,
@@ -568,6 +569,24 @@ export const resetPassword = async (req, res) => {
     console.error("An error occured while trying to reset password:", error);
     res.status(500).json({
       message: "Server error. An error occured while trying to reset password.",
+    });
+  }
+};
+
+export const getMe = async (req, res) => {
+  const userId = req.user.id;
+
+  try {
+    const result = await getUserById(userId);
+
+    const user = result.rows[0];
+
+    res.status(200).json({ user});
+  } catch (error) {
+    console.error("An error occured while trying to get your profile:", error);
+    res.status(500).json({
+      message:
+        "Server error. An error occured while trying to get your profile.",
     });
   }
 };
