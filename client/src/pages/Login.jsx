@@ -34,31 +34,62 @@ function Login() {
     <div className="flex items-center justify-center h-screen">
       <form
         onSubmit={handleSubmit}
-        className="flex flex-col items-center gap-5 w-[90%] max-w-[300px]"
+        className="flex flex-col items-center gap-5 w-[90%] max-w-[380px] border px-10 py-12 pt-8"
       >
-        <h1>Login to Clippointment</h1>
+        <div className="w-full">
+          <h1 className="self-start text-md pb-2">
+            Welcome to <br />{" "}
+            <span className="font-bold text-xl">Clippointment!</span>
+          </h1>
+          <p className="text-sm text-gray-400">Please enter your details</p>
+        </div>
 
-        <input
-          onChange={(e) => setEmail(e.target.value)}
-          className="border-2 p-2 w-full"
-          type="email"
-          placeholder="Email"
-          value={email}
-        />
+        <div className="w-full">
+          <label className="text-sm" htmlFor="email">
+            Email
+          </label>
+          <input
+            id="email"
+            onChange={(e) => setEmail(e.target.value)}
+            className="border-2 p-2 w-full"
+            type="email"
+            placeholder="Enter email"
+            value={email}
+          />
+        </div>
 
-        <input
-          onChange={(e) => setPassword(e.target.value)}
-          className="border-2 p-2 w-full"
-          type="password"
-          placeholder="Password"
-          value={password}
-        />
+        <div className="w-full">
+          <label className="text-sm" htmlFor="password">
+            Password
+          </label>
+          <input
+            id="password"
+            onChange={(e) => setPassword(e.target.value)}
+            className="border-2 p-2 w-full"
+            type="password"
+            placeholder="Enter password"
+            value={password}
+          />
+          <p className="text-sm cursor-pointer text-right pt-2">
+            Forgot Password?
+          </p>
+        </div>
 
-        <button className="bg-black text-white w-full p-2" type="submit">
-          Login
-        </button>
+        <div className="w-full">
+          <button className="bg-black text-white w-full p-2" type="submit">
+            Login
+          </button>
+          <p className="pt-2 text-sm text-center">
+            Don't have an account?{" "}
+            <span className="text-blue-700 cursor-pointer">Create Account</span>
+          </p>
+        </div>
 
-        <p className="text-red-500 text-center text-sm italic">{message}</p>
+        {message && (
+          <p className="text-red-500 bg-red-200 p-2 w-full text-center text-sm italic">
+            {message}
+          </p>
+        )}
       </form>
     </div>
   );
