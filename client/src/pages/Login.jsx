@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axios.js";
+import { useAuth } from "../context/AuthContext.jsx";
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -8,6 +9,8 @@ function Login() {
   const [message, setMessage] = useState("");
 
   const navigate = useNavigate();
+
+  const { checkAuth } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,6 +23,7 @@ function Login() {
 
       setMessage(response?.data?.message);
 
+      await checkAuth();
       navigate("/");
     } catch (error) {
       setMessage(error.response?.data?.message);
