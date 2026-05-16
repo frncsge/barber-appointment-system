@@ -37,9 +37,9 @@ function Login() {
         className="flex flex-col items-center gap-5 w-[90%] max-w-[380px] border px-10 py-12 pt-8"
       >
         <div className="w-full">
-          <h1 className="self-start text-md pb-2">
+          <h1 className="self-start text-md pb-1">
             Welcome to <br />{" "}
-            <span className="font-bold text-xl">Clippointment!</span>
+            <span className="font-bold text-2xl">Clippointment!</span>
           </h1>
           <p className="text-sm text-gray-400">Please enter your details</p>
         </div>
@@ -53,7 +53,7 @@ function Login() {
             onChange={(e) => setEmail(e.target.value)}
             className="border-2 p-2 w-full"
             type="email"
-            placeholder="Enter email"
+            placeholder="email@example.com"
             value={email}
           />
         </div>
@@ -67,26 +67,28 @@ function Login() {
             onChange={(e) => setPassword(e.target.value)}
             className="border-2 p-2 w-full"
             type="password"
-            placeholder="Enter password"
             value={password}
           />
-          <p className="text-sm cursor-pointer text-right pt-2">
+          <p
+            className="text-sm cursor-pointer text-right pt-2 hover:underline"
+            onClick={() => navigate("/forgot-password")}
+          >
             Forgot Password?
           </p>
         </div>
 
         <div className="w-full">
-          <button className="bg-black text-white w-full p-3" type="submit">
+          <button className="bg-black text-white w-full p-3 hover:font-semibold" type="submit">
             Login
           </button>
           <p className="pt-2 text-sm text-center">
             Don't have an account?{" "}
-            <span className="text-blue-700 cursor-pointer">Create Account</span>
+            <span className="text-blue-700 cursor-pointer hover:underline">Create Account</span>
           </p>
         </div>
 
         {message && (
-          <p className="text-red-500 bg-red-200 p-2 w-full text-center text-sm italic">
+          <p className="text-red-500 bg-red-100 p-2 w-full text-center text-sm italic">
             {message}
           </p>
         )}

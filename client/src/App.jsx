@@ -2,11 +2,17 @@ import { Routes, Route } from "react-router-dom";
 import Login from "./pages/Login.jsx";
 import Home from "./pages/Home.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
+import ForgotPassword from "./pages/ForgotPassword.jsx";
+import VerifyOtp from "./pages/VerifyOtp.jsx";
+import PasswordReset from "./pages/PasswordReset.jsx";
 
 function App() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/forgot-password/verify-otp" element={<VerifyOtp />} />
+      <Route path="/password-reset" element={<PasswordReset />} />
 
       <Route
         path="/"
