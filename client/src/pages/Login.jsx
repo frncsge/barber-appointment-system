@@ -76,7 +76,7 @@ function Login() {
         </div>
 
         <div className="w-full">
-          <button className="bg-black text-white w-full p-2" type="submit">
+          <button className="bg-black text-white w-full p-3" type="submit">
             Login
           </button>
           <p className="pt-2 text-sm text-center">
