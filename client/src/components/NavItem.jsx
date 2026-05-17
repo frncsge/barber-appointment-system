@@ -11,7 +11,7 @@ function NavItem({ to, icon, label }) {
         after:absolute
         after:left-0
         after:-bottom-1
-        after:h-[2px]
+        after:h-[1px]
         after:bg-white
         after:transition-all
         ${isActive && "after:w-full"}`
