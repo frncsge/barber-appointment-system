@@ -1,9 +1,10 @@
 import api from "../api/axios.js";
 import { useNavigate } from "react-router-dom";
+import Navbar from "../components/Navbar.jsx";
 
 function Home() {
   const navigate = useNavigate();
-  
+
   async function handleLogout() {
     try {
       const response = await api.post("/auth/log-out");
@@ -17,10 +18,13 @@ function Home() {
   }
 
   return (
-    <div>
-      <h1>Home page babyyy</h1>
-      <button onClick={handleLogout}>logout</button>
-    </div>
+    <>
+      <Navbar />
+      <div>
+        <h1>Home page babyyy</h1>
+        <button onClick={handleLogout}>logout</button>
+      </div>
+    </>
   );
 }
 
