@@ -422,8 +422,7 @@ export const sendOtp = async (req, res) => {
     }
 
     res.status(200).json({
-      message:
-        "Check your email for a 6-digit verification code.",
+      message: "Check your email for a 6-digit verification code.",
     });
   } catch (error) {
     console.error("An error occured while trying to send OTP:", error);
@@ -448,7 +447,7 @@ export const verifyOtp = async (req, res) => {
   if (!otp) return res.status(400).json({ message: "6-digit OTP is required" });
 
   if (!isValidOtp(otp))
-    return res.status(400).json({ message: "Invalid or expired OTP" });
+    return res.status(400).json({ message: "OTP must be a 6-digit number" });
 
   try {
     const allowed = checkRateLimit(
