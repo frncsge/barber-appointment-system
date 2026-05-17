@@ -422,8 +422,7 @@ export const sendOtp = async (req, res) => {
     }
 
     res.status(200).json({
-      message:
-        "If an account exists for this email, a 6-digit OTP has been sent.",
+      message: "Check your email for a 6-digit verification code.",
     });
   } catch (error) {
     console.error("An error occured while trying to send OTP:", error);
@@ -448,7 +447,7 @@ export const verifyOtp = async (req, res) => {
   if (!otp) return res.status(400).json({ message: "6-digit OTP is required" });
 
   if (!isValidOtp(otp))
-    return res.status(400).json({ message: "Invalid or expired OTP" });
+    return res.status(400).json({ message: "OTP must be a 6-digit number" });
 
   try {
     const allowed = checkRateLimit(
@@ -461,6 +460,13 @@ export const verifyOtp = async (req, res) => {
         message: "Too many OTP verification attempts. Please try again later",
       });
 
+    // increment otp attempt and check if it reached max
+    const count = await redisClient.incr(`otp:attempts:${otp}`);
+    if (count > OTP_MAX_ATTEMPTS)
+      return res.status(429).json({
+        message: "Too many incorrect attempts. Please request a new code",
+      });
+
     // retrieve stored otp in redis
     const storedOtp = await redisClient.get(`password-reset:${email}`);
 
@@ -469,13 +475,6 @@ export const verifyOtp = async (req, res) => {
 
     if (otp !== storedOtp)
       return res.status(400).json({ message: "Invalid or expired OTP" });
-
-    // increment otp attempt and check if it reached max
-    const count = await redisClient.incr(`otp:attempts:${otp}`);
-    if (count > OTP_MAX_ATTEMPTS)
-      return res.status(429).json({
-        message: "Too many incorrect attempts. Please request a new code",
-      });
 
     // if otp valid, delete the used OTP and create reset password session using redis
     await redisClient.del(`password-reset:${email}`);
@@ -581,7 +580,7 @@ export const getMe = async (req, res) => {
 
     const user = result.rows[0];
 
-    res.status(200).json({ user});
+    res.status(200).json({ user });
   } catch (error) {
     console.error("An error occured while trying to get your profile:", error);
     res.status(500).json({
