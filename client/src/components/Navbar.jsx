@@ -1,6 +1,6 @@
 import { CgProfile } from "react-icons/cg";
 import { MdSchedule } from "react-icons/md";
-import { RiHomeLine } from "react-icons/ri";
+import { MdDashboard } from "react-icons/md";
 import { IoCalendarOutline } from "react-icons/io5";
 import { GiHamburgerMenu } from "react-icons/gi";
 import NavItem from "./NavItem.jsx";
@@ -11,9 +11,9 @@ function Navbar() {
 
   const navItems = [
     {
-      to: "/",
-      icon: <RiHomeLine />,
-      label: "Home",
+      to: "/dashboard",
+      icon: <MdDashboard />,
+      label: "Dashboard",
     },
     {
       to: "/schedule",

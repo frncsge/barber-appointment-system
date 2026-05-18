@@ -2,7 +2,7 @@ import api from "../api/axios.js";
 import { replace, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar.jsx";
 
-function Home() {
+function Dashboard() {
   const navigate = useNavigate();
 
   async function handleLogout() {
@@ -21,11 +21,11 @@ function Home() {
     <>
       <Navbar />
       <div>
-        <h1>Home page babyyy</h1>
+        <h1>Dashboard babyyy</h1>
         <button onClick={handleLogout}>logout</button>
       </div>
     </>
   );
 }
 
-export default Home;
+export default Dashboard;
