@@ -1,5 +1,5 @@
 import api from "../api/axios.js";
-import { useNavigate } from "react-router-dom";
+import { replace, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar.jsx";
 
 function Home() {
@@ -10,7 +10,7 @@ function Home() {
       const response = await api.post("/auth/log-out");
 
       alert(response?.data?.message);
-      navigate("/login");
+      navigate("/login", { replace: true });
     } catch (error) {
       alert(error.response?.data?.message);
       alert(error.response?.data?.message);

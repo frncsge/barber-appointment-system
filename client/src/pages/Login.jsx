@@ -34,7 +34,7 @@ function Login() {
     <div className="flex items-center justify-center h-screen">
       <form
         onSubmit={handleSubmit}
-        className="flex flex-col items-center gap-5 w-[90%] max-w-[380px] border px-10 py-12 pt-8"
+        className="flex flex-col items-center gap-5 w-[90%] max-w-[380px] border px-10 py-12 pt-8 bg-white"
       >
         <div className="w-full">
           <h1 className="self-start text-md pb-1">
