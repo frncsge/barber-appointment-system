@@ -5,6 +5,7 @@ import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import ForgotPassword from "./pages/ForgotPassword.jsx";
 import VerifyOtp from "./pages/VerifyOtp.jsx";
 import PasswordReset from "./pages/PasswordReset.jsx";
+import Schedule from "./pages/Schedule.jsx";
 
 function App() {
   return (
@@ -21,6 +22,15 @@ function App() {
         element={
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/schedule"
+        element={
+          <ProtectedRoute>
+            <Schedule />
           </ProtectedRoute>
         }
       />
