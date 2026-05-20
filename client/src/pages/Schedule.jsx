@@ -3,7 +3,7 @@ import { BsThreeDots } from "react-icons/bs";
 import { useEffect, useState } from "react";
 import api from "../api/axios.js";
 import { useAuth } from "../context/AuthContext.jsx";
-import { formatDate } from "../utils/date.js";
+import { formatDate, formatDateYMD, isToday } from "../utils/date.js";
 import { formatTime } from "../utils/time.js";
 import { GoDotFill } from "react-icons/go";
 
@@ -13,6 +13,7 @@ function Schedule() {
   //   fetch workHours data from database
   const [workHours, setWorkHours] = useState([]);
   const [error, setError] = useState(null);
+  const [selectedSched, setSelectedSched] = useState(null);
 
   useEffect(() => {
     const fetchWorkHours = async () => {
@@ -20,6 +21,10 @@ function Schedule() {
         const response = await api.get(`/barbers/${user.id}/work-hours`);
 
         setWorkHours(response.data.workHours);
+
+        if (response.data.workHours.length > 0) {
+          setSelectedSched(formatDateYMD(response.data.workHours[0].date));
+        }
       } catch (error) {
         setError(error);
       }
@@ -63,6 +68,29 @@ function Schedule() {
     }
   };
 
+  // fetch available time slots and time slots marked unavailable
+  const [timeSlots, setTimeSlots] = useState({
+    available: [],
+    unavailable: [],
+  });
+
+  useEffect(() => {
+    const fetchAvailable = async () => {
+      if (!selectedSched) return;
+
+      const response = await api.get(
+        `/barbers/${user.id}/time-slots?date=${selectedSched}`,
+      );
+
+      setTimeSlots((prev) => ({
+        ...prev,
+        available: response.data?.availableTimeSlots,
+      }));
+    };
+
+    fetchAvailable();
+  }, [selectedSched]);
+
   return (
     <>
       <Navbar />
@@ -73,25 +101,32 @@ function Schedule() {
           <div className="m-4 p-4 border">
             <h1 className="text-sm font-bold mb-4">Today's Schedule</h1>
 
-            <span className="text-sm text-gray-500">
-              {formatDate(workHours[0]?.date)}
-            </span>
-            <h2 className="text-xl font-bold">
-              {formatTime(workHours[0]?.start_time ?? "")} -{" "}
-              {formatTime(workHours[0]?.end_time ?? "")}
-            </h2>
-            <h3 className="font-bold text-lg text-gray-600">
-              {workHours[0]?.slot_interval}
-              <span className="font-normal text-sm text-gray-500">
-                {" "}
-                min / haircut
+            <div className="cursor-pointer group">
+              <span className="text-sm text-gray-500">
+                {formatDate(workHours[0]?.date)}
               </span>
-            </h3>
+              <h2
+                className="text-xl font-bold group-hover:text-blue-600 group-hover:underline"
+                onClick={() =>
+                  setSelectedSched(formatDateYMD(workHours[0]?.date))
+                }
+              >
+                {formatTime(workHours[0]?.start_time ?? "")} -{" "}
+                {formatTime(workHours[0]?.end_time ?? "")}
+              </h2>
+              <h3 className="font-bold text-lg text-gray-600">
+                {workHours[0]?.slot_interval}
+                <span className="font-normal text-sm text-gray-500">
+                  {" "}
+                  min / haircut
+                </span>
+              </h3>
+            </div>
           </div>
 
           {/* for upcoming schedule */}
           <div className="m-4 p-4 border">
-            <h1 className="text-sm font-bold mb-4">Upcoming Schedule</h1>
+            <h1 className="text-sm font-bold mb-5">Upcoming Schedule</h1>
 
             {/* cards for upcoming schedules */}
             {workHours.slice(1).map((item) => {
@@ -104,7 +139,10 @@ function Schedule() {
                   <GoDotFill className="absolute -left-1 -top-1 text-gray-400" />
 
                   {/* content */}
-                  <div className="pb-5 cursor-pointer group">
+                  <div
+                    className="pb-5 cursor-pointer group"
+                    onClick={() => setSelectedSched(formatDateYMD(item?.date))}
+                  >
                     {/* date */}
                     <span className="block text-xs text-gray-500">
                       {formatDate(item?.date)}
@@ -132,7 +170,30 @@ function Schedule() {
         </section>
 
         {/* time slots section */}
-        <section className="bg-gray-100"></section>
+        <section className="hidden bg-gray-100 lg:flex items-start justify-center py-3">
+          {/* time slots container */}
+          <div className="bg-white border p-4">
+            <h1 className="text-sm mb-5">
+              Available Time Slots for{" "}
+              <span className="font-bold">
+                {isToday(selectedSched) ? "Today" : formatDate(selectedSched)}
+              </span>
+            </h1>
+
+            <div className="grid grid-cols-4 xl:grid-cols-6 gap-3">
+              {timeSlots.available.map((slot) => {
+                return (
+                  <div
+                    key={slot}
+                    className="p-2 border border-black inline-block"
+                  >
+                    {formatTime(slot)}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
 
         {/* add schedule section */}
         <section className="bg-gray-100 py-3 flex justify-center items-start">
