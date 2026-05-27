@@ -9,6 +9,33 @@ import { getWorkHoursByIdAndDate } from "../models/workHours.model.js";
 import { isPastDate } from "../utils/date.util.js";
 import { getAppointmentsByDate } from "../models/appointments.model.js";
 
+export const getUnavailableTimeSlot = async (req, res) => {
+  const { date } = req.query;
+
+  if (!date) return res.status(400).json({ message: "Date is required" });
+
+  const error = validateDateInput(date);
+  if (error) return res.status(400).json({ message: error });
+
+  try {
+    const unavailableTimeSlots = await getUnavailableTimeSlotsByIdAndDate(
+      req.user.id,
+      date,
+    );
+
+    res.status(200).json({ unavailableTimeSlots });
+  } catch (error) {
+    console.error(
+      "An error occured while trying to get unavailable time slots by date:",
+      error,
+    );
+    res.status(500).json({
+      message:
+        "Server error. An error occured while trying to get unavailable time slots by date.",
+    });
+  }
+};
+
 export const addUnavailableTimeSlot = async (req, res) => {
   const { date } = req.params;
   const { timeSlots } = req.body;
@@ -96,7 +123,7 @@ export const addUnavailableTimeSlot = async (req, res) => {
 
     if (error.code === "P0001") {
       return res.status(400).json({
-        message: "Cannot add time slot as unavailable for a past date",
+        message: "Cannot mark a past time slot as unavailable.",
       });
     }
 
