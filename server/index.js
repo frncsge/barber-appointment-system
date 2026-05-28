@@ -17,7 +17,7 @@ app.set("trust proxy", 1);
 app.use(globalRateLimit);
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: true,
     credentials: true,
   }),
 );

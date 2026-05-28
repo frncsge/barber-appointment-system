@@ -92,15 +92,15 @@ export const logIn = async (req, res) => {
 
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      secure: true,
+      sameSite: "none",
       maxAge: 15 * 60 * 1000,
     });
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      secure: true,
+      sameSite: "none",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -258,7 +258,7 @@ export const refresh = async (req, res) => {
       sameSite: "Strict",
       maxAge: 15 * 60 * 1000,
     });
-    await redisClient.del(`refreshToken:${refreshToken}`);
+    await redisClient.del(`refreshToken:${decoded.sub}`);
 
     // generate new access token
     const newAccessToken = generateAccessToken(decoded.sub);
@@ -275,15 +275,15 @@ export const refresh = async (req, res) => {
     // send new access and refresh tokens
     res.cookie("accessToken", newAccessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "Strict",
+      secure: true,
+      sameSite: "none",
       maxAge: 15 * 60 * 1000,
     });
 
     res.cookie("refreshToken", newRefreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "Strict",
+      secure: true,
+      sameSite: "none",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -303,14 +303,14 @@ export const logOut = async (req, res) => {
     // clear access and refresh token cookies
     res.clearCookie("accessToken", {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "Strict",
+      secure: true,
+      sameSite: "none",
     });
 
     res.clearCookie("refreshToken", {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "Strict",
+      secure: true,
+      sameSite: "none",
     });
 
     res.status(200).json({ message: "Log-out successful" });
@@ -548,15 +548,15 @@ export const resetPassword = async (req, res) => {
 
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "Strict",
+      secure: true,
+      sameSite: "none",
       maxAge: 15 * 60 * 1000,
     });
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "Strict",
+      secure: true,
+      sameSite: "none",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
