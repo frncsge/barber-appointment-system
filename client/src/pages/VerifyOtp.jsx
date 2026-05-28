@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { IoChevronBackSharp } from "react-icons/io5";
 import { useNavigate } from "react-router-dom";
-import api from "../api/axios.js";
+import { publicApi } from "../api/axios.js";
 
 function VerifyOtp() {
   const [isLoading, setIsLoading] = useState(false);
@@ -32,7 +32,7 @@ function VerifyOtp() {
     setIsLoading(true);
 
     try {
-      const response = await api.post("/auth/password-resets/verify", {
+      const response = await publicApi.post("/auth/password-resets/verify", {
         email,
         otp,
       });
@@ -81,7 +81,7 @@ function VerifyOtp() {
     if (cooldown > 0) return;
 
     try {
-      const response = await api.post("/auth/password-resets", {
+      const response = await publicApi.post("/auth/password-resets", {
         email,
       });
 

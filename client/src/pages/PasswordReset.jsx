@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { IoChevronBackSharp, IoPlaySkipForwardOutline } from "react-icons/io5";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
-import api from "../api/axios.js";
+import { publicApi } from "../api/axios.js";
 
 function PasswordReset() {
   const [isLoading, setIsLoading] = useState(false);
@@ -29,7 +29,7 @@ function PasswordReset() {
     setIsLoading(true);
 
     try {
-      const response = await api.post("/auth/password-resets/confirm", {
+      const response = await publicApi.post("/auth/password-resets/confirm", {
         email,
         newPassword: password,
         confirmNewPassword: confirm,

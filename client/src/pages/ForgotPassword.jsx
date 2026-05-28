@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { IoChevronBackSharp } from "react-icons/io5";
 import { useState } from "react";
-import api from "../api/axios.js";
+import { publicApi } from "../api/axios.js";
 
 function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -17,7 +17,7 @@ function ForgotPassword() {
     setIsLoading(true);
 
     try {
-      const response = await api.post("/auth/password-resets", {
+      const response = await publicApi.post("/auth/password-resets", {
         email,
       });
 

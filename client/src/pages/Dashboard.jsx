@@ -1,4 +1,4 @@
-import api from "../api/axios.js";
+import { publicApi } from "../api/axios.js";
 import { replace, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar.jsx";
 
@@ -7,7 +7,7 @@ function Dashboard() {
 
   async function handleLogout() {
     try {
-      const response = await api.post("/auth/log-out");
+      const response = await publicApi.post("/auth/log-out");
 
       alert(response?.data?.message);
       navigate("/login", { replace: true });

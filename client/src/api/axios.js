@@ -1,7 +1,17 @@
 import axios from "axios";
 
-const api = axios.create({
-  baseURL: "http://localhost:3000/api",
+const baseURL = "/api";
+
+export const publicApi = axios.create({
+  baseURL,
+  withCredentials: true,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+export const api = axios.create({
+  baseURL,
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
@@ -9,7 +19,7 @@ const api = axios.create({
 });
 
 const refreshApi = axios.create({
-  baseURL: "http://localhost:3000/api",
+  baseURL,
   withCredentials: true,
 });
 

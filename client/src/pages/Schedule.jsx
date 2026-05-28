@@ -1,6 +1,6 @@
 import Navbar from "../components/Navbar.jsx";
 import { useEffect, useState } from "react";
-import api from "../api/axios.js";
+import { api } from "../api/axios.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import { formatDate, formatDateYMD, isToday } from "../utils/date.js";
 import { formatTime } from "../utils/time.js";

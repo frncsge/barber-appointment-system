@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../api/axios.js";
+import { publicApi } from "../api/axios.js";
 import { useAuth } from "../context/AuthContext.jsx";
 
 function Login() {
@@ -16,7 +16,7 @@ function Login() {
     e.preventDefault();
 
     try {
-      const response = await api.post("/auth/log-in", {
+      const response = await publicApi.post("/auth/log-in", {
         email,
         password,
       });
@@ -78,12 +78,17 @@ function Login() {
         </div>
 
         <div className="w-full">
-          <button className="bg-black text-white w-full p-3 hover:font-semibold" type="submit">
+          <button
+            className="bg-black text-white w-full p-3 hover:font-semibold"
+            type="submit"
+          >
             Login
           </button>
           <p className="pt-2 text-sm text-center">
             Don't have an account?{" "}
-            <span className="text-blue-700 cursor-pointer hover:underline">Create Account</span>
+            <span className="text-blue-700 cursor-pointer hover:underline">
+              Create Account
+            </span>
           </p>
         </div>
 
