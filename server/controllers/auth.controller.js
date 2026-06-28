@@ -383,7 +383,7 @@ export const sendVerification = async (req, res) => {
   }
 };
 
-export const sendOtp = async (req, res) => {
+export const sendPasswordResetOtp = async (req, res) => {
   const email = req.body.email?.trim().toLowerCase();
 
   if (!email)
@@ -422,7 +422,7 @@ export const sendOtp = async (req, res) => {
     }
 
     res.status(200).json({
-      message: "Check your email for a 6-digit verification code.",
+      message: "If an account exists for this email, a password reset code has been sent.",
     });
   } catch (error) {
     console.error("An error occured while trying to send OTP:", error);
@@ -432,7 +432,7 @@ export const sendOtp = async (req, res) => {
   }
 };
 
-export const verifyOtp = async (req, res) => {
+export const verifyPasswordResetOtp = async (req, res) => {
   const email = req.body.email?.trim().toLowerCase();
   const otp = req.body.otp?.trim();
 
@@ -589,3 +589,6 @@ export const getMe = async (req, res) => {
     });
   }
 };
+
+
+// todo: create new route and controller for sending OTP and verifying it for customer email when creating an appointment with their email
