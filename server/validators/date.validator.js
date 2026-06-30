@@ -1,4 +1,8 @@
-import { validateDateFormat, validateDateValues } from "../utils/date.util.js";
+import {
+  validateDateFormat,
+  validateDateValues,
+  isPastDate,
+} from "../utils/date.util.js";
 
 export const validateDateInput = (date) => {
   // stricly check proper date format YYYY-MM-DD
@@ -9,6 +13,10 @@ export const validateDateInput = (date) => {
   // check if date is valid
   if (!validateDateValues(date)) {
     return "Invalid date";
+  }
+
+  if (isPastDate(date)) {
+    return "The selected date is invalid. Please choose today or a future date.";
   }
 
   return null;
