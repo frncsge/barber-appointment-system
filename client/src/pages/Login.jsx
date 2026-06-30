@@ -24,7 +24,7 @@ function Login() {
       setMessage(response?.data?.message);
 
       await checkAuth();
-      navigate("/");
+      navigate("/dashboard");
     } catch (error) {
       setMessage(error.response?.data?.message);
     }

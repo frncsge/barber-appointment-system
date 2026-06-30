@@ -42,7 +42,7 @@ function PasswordReset() {
       alert("New password saved!");
 
       await checkAuth();
-      navigate("/");
+      navigate("/dashboard");
     } catch (error) {
       setMessage(error.response?.data?.message);
     } finally {

@@ -8,4 +8,30 @@ const api = axios.create({
   },
 });
 
+const refreshApi = axios.create({
+  baseURL: "http://localhost:3000/api",
+  withCredentials: true,
+});
+
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const origReq = error.config;
+
+    if (error.response?.status === 401 && !origReq._retry) {
+      origReq._retry = true;
+
+      try {
+        await refreshApi.post("/auth/refresh");
+
+        return api(origReq);
+      } catch (refreshError) {
+        return Promise.reject(refreshError);
+      }
+    }
+
+    return Promise.reject(error);
+  },
+);
+
 export default api;
