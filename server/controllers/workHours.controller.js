@@ -28,7 +28,7 @@ export const addWorkHours = async (req, res) => {
 
   try {
     await createWorkHours({
-      userId: req.user.id,
+      userId: req.user.id,  
       date,
       startTime,
       endTime,
@@ -41,13 +41,6 @@ export const addWorkHours = async (req, res) => {
       return res
         .status(400)
         .json({ message: `Work hours for date ${date} already exist` });
-    }
-
-    // error for entering date < current date
-    if (error.code === "23514") {
-      return res
-        .status(400)
-        .json({ message: "Cannot set work hours for a past date" });
     }
 
     console.error(
