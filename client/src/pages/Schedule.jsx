@@ -9,7 +9,7 @@ import ScheduleMenu from "../components/ScheduleMenu.jsx";
 import ConfirmModal from "../components/ConfirmModal.jsx";
 
 function Schedule() {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
 
   //   fetch workHours data from database
   const [workHours, setWorkHours] = useState([]);
@@ -17,6 +17,8 @@ function Schedule() {
   const [selectedSched, setSelectedSched] = useState(null);
 
   useEffect(() => {
+    if (isLoading || !user) return;
+
     const fetchWorkHours = async () => {
       try {
         const response = await api.get(`/barbers/${user.id}/work-hours`);
@@ -39,7 +41,7 @@ function Schedule() {
     };
 
     fetchWorkHours();
-  }, []);
+  }, [user, isLoading]);
 
   // store schedule for today, if there's any
   const todayWorkHour = workHours.find((w) => isToday(w.date));
