@@ -16,10 +16,14 @@ function Login() {
     e.preventDefault();
 
     try {
-      const response = await api.post("/auth/log-in", {
-        email,
-        password,
-      });
+      const response = await api.post(
+        "/auth/log-in",
+        {
+          email,
+          password,
+        },
+        { skipAuthRefresh: true },
+      );
 
       setMessage(response?.data?.message);
 
@@ -78,12 +82,17 @@ function Login() {
         </div>
 
         <div className="w-full">
-          <button className="bg-black text-white w-full p-3 hover:font-semibold" type="submit">
+          <button
+            className="bg-black text-white w-full p-3 hover:font-semibold"
+            type="submit"
+          >
             Login
           </button>
           <p className="pt-2 text-sm text-center">
             Don't have an account?{" "}
-            <span className="text-blue-700 cursor-pointer hover:underline">Create Account</span>
+            <span className="text-blue-700 cursor-pointer hover:underline">
+              Create Account
+            </span>
           </p>
         </div>
 

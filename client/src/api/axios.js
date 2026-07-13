@@ -18,6 +18,10 @@ api.interceptors.response.use(
   async (error) => {
     const origReq = error.config;
 
+    if (origReq.skipAuthRefresh) {
+      return Promise.reject(error);
+    }
+
     if (error.response?.status === 401 && !origReq._retry) {
       origReq._retry = true;
 
