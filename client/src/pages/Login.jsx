@@ -45,7 +45,7 @@ function Login() {
             Welcome to <br />{" "}
             <span className="font-bold text-2xl">Clippointment!</span>
           </h1>
-          <p className="text-sm text-gray-400">Please enter your details</p>
+          <p className="text-sm text-gray-400">Please enter your details to login</p>
         </div>
 
         <div className="w-full">
@@ -90,7 +90,10 @@ function Login() {
           </button>
           <p className="pt-2 text-sm text-center">
             Don't have an account?{" "}
-            <span className="text-blue-700 cursor-pointer hover:underline">
+            <span
+              className="text-blue-700 cursor-pointer hover:underline"
+              onClick={() => navigate("/register")}
+            >
               Create Account
             </span>
           </p>
