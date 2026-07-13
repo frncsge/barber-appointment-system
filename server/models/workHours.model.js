@@ -8,16 +8,44 @@ export const createWorkHours = async ({
   slotInterval,
 }) => {
   try {
-    await pool.query(
+    const result = await pool.query(
       `
                 INSERT INTO work_hours (user_id, date, start_time, end_time, slot_interval)
-                VALUES ($1, $2, $3, $4, $5)
+                VALUES ($1, $2, $3, $4, $5) RETURNING *
             `,
       [userId, date, startTime, endTime, slotInterval],
     );
+
+    return result.rows[0];
   } catch (error) {
     console.error(
       "An error occured while trying to create new work hours:",
+      error,
+    );
+    throw error;
+  }
+};
+
+export const getWorkHoursById = async (userId) => {
+  try {
+    const result = await pool.query(
+      `
+        SELECT 
+	        u.account_name AS "barber",
+	        wh.*
+        FROM work_hours wh
+        JOIN users u ON u.id = wh.user_id
+        WHERE wh.user_id = $1
+        AND wh.date >= CURRENT_DATE
+        ORDER BY wh.date ASC;
+      `,
+      [userId],
+    );
+
+    return result;
+  } catch (error) {
+    console.error(
+      "An error occured while trying to get work hours by date:",
       error,
     );
     throw error;
@@ -78,12 +106,11 @@ export const updateWorkHoursByIdAndDate = async ({
   }
 };
 
-export const deleteWorkHoursByIdAndDate = async (userId, date) => {
+export const deleteWorkHoursById = async (workHoursId) => {
   try {
-    const result = await pool.query(
-      "DELETE FROM work_hours WHERE user_id = $1 AND date = $2",
-      [userId, date],
-    );
+    const result = await pool.query("DELETE FROM work_hours WHERE id = $1", [
+      workHoursId,
+    ]);
 
     return result;
   } catch (error) {

@@ -1,6 +1,20 @@
 import { TIME_SERIES_DUPLICATE_POLICIES } from "redis";
 import pool from "../../config/dbConfig.js";
 
+export const getUserById = async (userId) => {
+  try {
+    const result = await pool.query(
+      "SELECT id, email, account_name FROM users WHERE id = $1",
+      [userId],
+    );
+
+    return result;
+  } catch (error) {
+    console.error("An error occured while trying to get user by id:", error);
+    throw error;
+  }
+};
+
 export const getUserByEmail = async (email) => {
   try {
     const result = await pool.query("SELECT * FROM users WHERE email = $1", [

@@ -4,7 +4,8 @@ import {
   createWorkHours,
   getWorkHoursByIdAndDate,
   updateWorkHoursByIdAndDate,
-  deleteWorkHoursByIdAndDate,
+  deleteWorkHoursById,
+  getWorkHoursById,
 } from "../models/workHours.model.js";
 import { generateTimeSlots } from "../utils/time.util.js";
 import { getUnavailableTimeSlotsByIdAndDate } from "../models/unavailableTimeSlots.model.js";
@@ -27,27 +28,23 @@ export const addWorkHours = async (req, res) => {
   if (error) return res.status(400).json({ message: error });
 
   try {
-    await createWorkHours({
+    const workHours = await createWorkHours({
       userId: req.user.id,
       date,
       startTime,
       endTime,
       slotInterval,
     });
-    res.status(201).json({ message: "New work hours succesfully added" });
+
+    res
+      .status(201)
+      .json({ message: "New work hours succesfully added", workHours });
   } catch (error) {
     // error for duplicate dates
     if (error.code === "23505") {
       return res
         .status(400)
         .json({ message: `Work hours for date ${date} already exist` });
-    }
-
-    // error for entering date < current date
-    if (error.code === "23514") {
-      return res
-        .status(400)
-        .json({ message: "Cannot set work hours for a past date" });
     }
 
     console.error(
@@ -62,21 +59,28 @@ export const addWorkHours = async (req, res) => {
 };
 
 export const getWorkHours = async (req, res) => {
-  const { id, date } = req.params;
+  const { id } = req.params;
+  const date = req.query?.date;
 
   if (isNaN(id))
     return res.status(400).json({ message: "ID must be a positive number" });
 
-  const error = validateDateInput(date);
-  if (error) return res.status(400).json({ message: error });
-
   try {
-    const workHours = await getWorkHoursByIdAndDate(id, date);
+    let workHours;
 
-    if (workHours.rowCount === 0)
-      return res.status(404).json({ message: `No work hours set for ${date}` });
+    if (date) {
+      const error = validateDateInput(date);
+      if (error) return res.status(400).json({ message: error });
 
-    res.status(200).json({ workHours: workHours.rows[0] });
+      workHours = await getWorkHoursByIdAndDate(id, date);
+    } else {
+      workHours = await getWorkHoursById(id);
+    }
+
+    // if (workHours.rowCount === 0)
+    //   return res.status(404).json({ message: `No work hours set for ${date}` });
+
+    res.status(200).json({ workHours: workHours.rows });
   } catch (error) {
     console.error("An error occured while trying to get work hours:", error);
     res.status(500).json({
@@ -86,7 +90,8 @@ export const getWorkHours = async (req, res) => {
 };
 
 export const getAvailableTimeSlots = async (req, res) => {
-  const { id, date } = req.params;
+  const { id } = req.params;
+  const date = req.query?.date;
 
   if (isNaN(id))
     return res.status(400).json({ message: "ID must be a positive number" });
@@ -143,7 +148,7 @@ export const getAvailableTimeSlots = async (req, res) => {
 };
 
 export const updateWorkHours = async (req, res) => {
-  const setDate = req.params.date;
+  const setDate = req.query.date;
   const updates = req.body;
   const allowedFields = ["date", "start_time", "end_time", "slot_interval"];
 
@@ -231,30 +236,17 @@ export const updateWorkHours = async (req, res) => {
 };
 
 export const deleteWorkHours = async (req, res) => {
-  const { date } = req.params;
+  const { id } = req.params;
 
-  if (date === undefined)
-    return res.status(400).json({ message: "Date is required" });
-
-  const error = validateDateInput(date);
-  if (error) res.status(400).json({ message: error });
-
-  // delete not allowed for past date
-  if (isPastDate(date))
-    return res
-      .status(403)
-      .json({ message: "Cannot delete work hours for a past date" });
+  if (!id || isNaN(Number(id)))
+    return res.status(400).json({ message: "Id must be a number" });
 
   try {
-    const result = await deleteWorkHoursByIdAndDate(req.user.id, date);
+    const result = await deleteWorkHoursById(id);
     if (result.rowCount === 0)
-      return res
-        .status(404)
-        .json({ message: `No work hours found for ${date}` });
+      return res.status(404).json({ message: `No work hours found` });
 
-    res
-      .status(200)
-      .json({ message: `Work hours on ${date} is deleted successfully` });
+    res.status(200).json({ message: `Work hours is deleted successfully` });
   } catch (error) {
     console.error("An error occured while trying to delete work hours:", error);
     res.status(500).json({

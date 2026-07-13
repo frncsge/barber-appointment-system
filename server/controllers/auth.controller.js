@@ -4,6 +4,7 @@ import {
   storeNewUser,
   verifyUser,
   updatePasswordByEmail,
+  getUserById,
 } from "../models/users.model.js";
 import {
   generateAccessToken,
@@ -92,14 +93,14 @@ export const logIn = async (req, res) => {
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "Strict",
+      sameSite: "lax",
       maxAge: 15 * 60 * 1000,
     });
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "Strict",
+      sameSite: "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -382,7 +383,7 @@ export const sendVerification = async (req, res) => {
   }
 };
 
-export const sendOtp = async (req, res) => {
+export const sendPasswordResetOtp = async (req, res) => {
   const email = req.body.email?.trim().toLowerCase();
 
   if (!email)
@@ -421,8 +422,7 @@ export const sendOtp = async (req, res) => {
     }
 
     res.status(200).json({
-      message:
-        "If an account exists for this email, a 6-digit OTP has been sent.",
+      message: "If an account exists for this email, a password reset code has been sent.",
     });
   } catch (error) {
     console.error("An error occured while trying to send OTP:", error);
@@ -432,7 +432,7 @@ export const sendOtp = async (req, res) => {
   }
 };
 
-export const verifyOtp = async (req, res) => {
+export const verifyPasswordResetOtp = async (req, res) => {
   const email = req.body.email?.trim().toLowerCase();
   const otp = req.body.otp?.trim();
 
@@ -447,7 +447,7 @@ export const verifyOtp = async (req, res) => {
   if (!otp) return res.status(400).json({ message: "6-digit OTP is required" });
 
   if (!isValidOtp(otp))
-    return res.status(400).json({ message: "Invalid or expired OTP" });
+    return res.status(400).json({ message: "OTP must be a 6-digit number" });
 
   try {
     const allowed = checkRateLimit(
@@ -460,6 +460,13 @@ export const verifyOtp = async (req, res) => {
         message: "Too many OTP verification attempts. Please try again later",
       });
 
+    // increment otp attempt and check if it reached max
+    const count = await redisClient.incr(`otp:attempts:${otp}`);
+    if (count > OTP_MAX_ATTEMPTS)
+      return res.status(429).json({
+        message: "Too many incorrect attempts. Please request a new code",
+      });
+
     // retrieve stored otp in redis
     const storedOtp = await redisClient.get(`password-reset:${email}`);
 
@@ -468,13 +475,6 @@ export const verifyOtp = async (req, res) => {
 
     if (otp !== storedOtp)
       return res.status(400).json({ message: "Invalid or expired OTP" });
-
-    // increment otp attempt and check if it reached max
-    const count = await redisClient.incr(`otp:attempts:${otp}`);
-    if (count > OTP_MAX_ATTEMPTS)
-      return res.status(429).json({
-        message: "Too many incorrect attempts. Please request a new code",
-      });
 
     // if otp valid, delete the used OTP and create reset password session using redis
     await redisClient.del(`password-reset:${email}`);
@@ -571,3 +571,24 @@ export const resetPassword = async (req, res) => {
     });
   }
 };
+
+export const getMe = async (req, res) => {
+  const userId = req.user.id;
+
+  try {
+    const result = await getUserById(userId);
+
+    const user = result.rows[0];
+
+    res.status(200).json({ user });
+  } catch (error) {
+    console.error("An error occured while trying to get your profile:", error);
+    res.status(500).json({
+      message:
+        "Server error. An error occured while trying to get your profile.",
+    });
+  }
+};
+
+
+// todo: create new route and controller for sending OTP and verifying it for customer email when creating an appointment with their email
