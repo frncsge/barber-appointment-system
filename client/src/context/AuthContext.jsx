@@ -9,7 +9,7 @@ export function AuthProvider({ children }) {
 
   const checkAuth = async () => {
     try {
-      const response = await api.get("/auth/me");
+      const response = await api.get("/auth/me", { skipAuthRefresh: true });
 
       setUser(response.data.user);
     } catch (error) {
