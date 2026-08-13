@@ -175,7 +175,7 @@ export const register = async (req, res) => {
     );
 
     // send email verification link
-    const link = `http://localhost:3000/api/auth/email-verifications/${verificationToken}`;
+    const link = `http://localhost:5173/email-verification?token=${verificationToken}`;
     await sendVerificationEmail(email, link);
 
     res
@@ -195,7 +195,7 @@ export const register = async (req, res) => {
 };
 
 export const verify = async (req, res) => {
-  const { token } = req.params;
+  const { token } = req.query;
 
   if (!token)
     return res
@@ -211,7 +211,7 @@ export const verify = async (req, res) => {
 
     if (!allowed)
       return res.status(429).json({
-        message: "Too many failed login attempts. Please try again later",
+        message: "Too many email verification attempts. Please try again later",
       });
 
     // retrieve verification token from redis
@@ -363,7 +363,7 @@ export const sendVerification = async (req, res) => {
       );
 
       // send email verification link
-      const link = `http://localhost:3000/api/auth/email-verifications/${verificationToken}`;
+      const link = `http://localhost:5173/email-verification?token=${verificationToken}`;
       await sendVerificationEmail(email, link);
     }
 

@@ -21,7 +21,7 @@ function App() {
 
       <Route path="/register" element={<Register />} />
       <Route
-        path="/email-verification/:verificationToken"
+        path="/email-verification"
         element={<VerifyEmail />}
       />
 

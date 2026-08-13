@@ -26,6 +26,6 @@ router.post("/password-resets", sendPasswordResetOtp);
 router.post("/password-resets/verify", verifyPasswordResetOtp);
 router.post("/password-resets/confirm", resetPassword);
 
-router.get("/email-verifications/:token", verify);
+router.get("/email-verifications", verify);
 
 export default router;
