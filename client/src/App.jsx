@@ -7,6 +7,7 @@ import VerifyOtp from "./pages/VerifyOtp.jsx";
 import PasswordReset from "./pages/PasswordReset.jsx";
 import Schedule from "./pages/Schedule.jsx";
 import Register from "./pages/Register.jsx";
+import VerifyEmail from "./pages/VerifyEmail.jsx";
 
 function App() {
   return (
@@ -19,6 +20,10 @@ function App() {
       <Route path="/password-reset" element={<PasswordReset />} />
 
       <Route path="/register" element={<Register />} />
+      <Route
+        path="/email-verification"
+        element={<VerifyEmail />}
+      />
 
       <Route
         path="/dashboard"
