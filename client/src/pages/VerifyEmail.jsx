@@ -19,15 +19,19 @@ function VerifyEmail() {
   useEffect(() => {
     const verifyToken = async () => {
       try {
-        const response = await api.get(`/auth/email-verifications?token=${token}`, {
-          skipAuthRefresh: true,
-        });
+        const response = await api.get(
+          `/auth/email-verifications?token=${token}`,
+          {
+            skipAuthRefresh: true,
+          },
+        );
 
         if (response.status === 200) {
           setVerification({
             isVerified: true,
             title: "Email verified",
             message: "Your email has been successfully verified.",
+            buttonMessage: "Go to dashboard",
           });
         }
       } catch (error) {
@@ -58,6 +62,7 @@ function VerifyEmail() {
         isVerified={verification.isVerified}
         title={verification.title}
         message={verification.message}
+        buttonMessage={verification.buttonMessage}
       />
     </main>
   );
