@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import VerificationStatus from "../components/VerificationStatus.jsx";
 import api from "../api/axios.js";
 import { timeToMinute } from "../../../server/utils/time.util.js";
+import { useAuth } from "../context/AuthContext.jsx";
 
 function VerifyEmail() {
   const [searchParams] = useSearchParams();
@@ -12,6 +13,8 @@ function VerifyEmail() {
     title: "Trying to verify your email",
     message: "Verifying your email. Please wait...",
   });
+
+  const { setUser } = useAuth();
 
   // get token from the url query parameter
   const token = searchParams.get("token");
@@ -34,6 +37,9 @@ function VerifyEmail() {
             buttonMessage: "Go to dashboard",
           });
         }
+
+        // set user to auth context in order to access protected routes
+        setUser(response.data.user);
       } catch (error) {
         if (error.response.status === 400) {
           setVerification({
