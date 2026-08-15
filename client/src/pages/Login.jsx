@@ -10,7 +10,7 @@ function Login() {
 
   const navigate = useNavigate();
 
-  const { checkAuth } = useAuth();
+  const { setUser } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -27,7 +27,7 @@ function Login() {
 
       setMessage(response?.data?.message);
 
-      await checkAuth();
+      setUser(response?.data?.user);
       navigate("/dashboard");
     } catch (error) {
       setMessage(error.response?.data?.message);
@@ -45,7 +45,9 @@ function Login() {
             Welcome to <br />{" "}
             <span className="font-bold text-2xl">Clippointment!</span>
           </h1>
-          <p className="text-sm text-gray-400">Please enter your details to login</p>
+          <p className="text-sm text-gray-400">
+            Please enter your details to login
+          </p>
         </div>
 
         <div className="w-full">

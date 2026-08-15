@@ -46,18 +46,18 @@ export const logIn = async (req, res) => {
 
   try {
     // initialize and check rate limit
-    const allowed = await checkRateLimit(
-      [
-        { key: `rateLimit:login:ip:${req.ip}`, maxAttempts: 25 },
-        { key: `rateLimit:login:email:${email}`, maxAttempts: 8 },
-      ],
-      15 * 60,
-    );
+    // const allowed = await checkRateLimit(
+    //   [
+    //     { key: `rateLimit:login:ip:${req.ip}`, maxAttempts: 25 },
+    //     { key: `rateLimit:login:email:${email}`, maxAttempts: 8 },
+    //   ],
+    //   15 * 60,
+    // );
 
-    if (!allowed)
-      return res.status(429).json({
-        message: "Too many failed login attempts. Please try again later",
-      });
+    // if (!allowed)
+    //   return res.status(429).json({
+    //     message: "Too many failed login attempts. Please try again later",
+    //   });
 
     const user = await getUserByEmail(email);
 
@@ -104,7 +104,14 @@ export const logIn = async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    res.status(200).json({ message: "Log-in successful" });
+    res.status(200).json({
+      message: "Log-in successful",
+      user: {
+        userId: user.rows[0].id,
+        storedEmail: user.rows[0].email,
+        name: user.rows[0].account_name,
+      },
+    });
   } catch (error) {
     console.error("An error occured while trying to log in user:", error);
     res.status(500).json({
@@ -141,28 +148,32 @@ export const register = async (req, res) => {
 
   try {
     // initialize and check rate limit
-    const allowed = await checkRateLimit(
-      [
-        { key: `rateLimit:register:ip:${req.ip}`, maxAttempts: 10 },
-        {
-          key: `rateLimit:register:email:${email}`,
-          maxAttempts: 3,
-        },
-      ],
-      60 * 60,
-    );
+    // const allowed = await checkRateLimit(
+    //   [
+    //     { key: `rateLimit:register:ip:${req.ip}`, maxAttempts: 10 },
+    //     {
+    //       key: `rateLimit:register:email:${email}`,
+    //       maxAttempts: 3,
+    //     },
+    //   ],
+    //   60 * 60,
+    // );
 
-    if (!allowed)
-      return res.status(429).json({
-        message: "Too many registration attempts. Please try again later",
-      });
+    // if (!allowed)
+    //   return res.status(429).json({
+    //     message: "Too many registration attempts. Please try again later",
+    //   });
 
     // hash password
     const hashedPassword = await bcrypt.hash(password, saltRound);
 
     // store new user in db with is_verified col equal to false (need email verification)
     const result = await storeNewUser({ email, hashedPassword, accountName });
-    const { id: userId } = result.rows[0];
+    const {
+      id: userId,
+      email: storedEmail,
+      account_name: name,
+    } = result.rows[0];
 
     // generate token for verification
     const verificationToken = generateToken();
@@ -171,7 +182,7 @@ export const register = async (req, res) => {
     await redisClient.setEx(
       `verify:${verificationToken}`,
       10 * 60,
-      String(userId),
+      JSON.stringify({ userId, storedEmail, name }),
     );
 
     // send email verification link
@@ -223,13 +234,47 @@ export const verify = async (req, res) => {
         .json({ message: "Invalid or expired verification token" });
 
     // if token is valid, mark user as verified
-    const userId = Number(stored);
-    await verifyUser(userId);
+    const user = JSON.parse(stored);
+    await verifyUser(user.id);
+
+    // create user session
+    const accessToken = generateAccessToken(user.id);
+    const refreshToken = generateRefreshToken(user.id);
+
+    // store refresh token in redis
+    const sevenDaysInSecs = 7 * 24 * 60 * 60;
+    await redisClient.setEx(
+      `refreshToken:${user.id}`,
+      sevenDaysInSecs,
+      refreshToken,
+    );
+
+    res.cookie("accessToken", accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 15 * 60 * 1000,
+    });
+
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
 
     // delete the saved token from redis
     await redisClient.del(`verify:${token}`);
 
-    res.status(200).send("Your account has been verified successfully!");
+    res.status(200).json({
+      message:
+        "Your account has been verified successfully! You are now logged in.",
+      user: {
+        userId: user.id,
+        storedEmail: user.email,
+        name: user.accountName,
+      },
+    });
   } catch (error) {
     console.error(
       "An error occured while trying to verify user account:",
@@ -422,7 +467,8 @@ export const sendPasswordResetOtp = async (req, res) => {
     }
 
     res.status(200).json({
-      message: "If an account exists for this email, a password reset code has been sent.",
+      message:
+        "If an account exists for this email, a password reset code has been sent.",
     });
   } catch (error) {
     console.error("An error occured while trying to send OTP:", error);
@@ -580,7 +626,13 @@ export const getMe = async (req, res) => {
 
     const user = result.rows[0];
 
-    res.status(200).json({ user });
+    res.status(200).json({
+      user: {
+        id: user.id,
+        email: user.email,
+        accountName: user.account_name,
+      },
+    });
   } catch (error) {
     console.error("An error occured while trying to get your profile:", error);
     res.status(500).json({
@@ -589,6 +641,5 @@ export const getMe = async (req, res) => {
     });
   }
 };
-
 
 // todo: create new route and controller for sending OTP and verifying it for customer email when creating an appointment with their email
